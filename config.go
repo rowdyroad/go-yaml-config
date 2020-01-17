@@ -2,6 +2,7 @@ package config
 
 import (
 	"flag"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,7 +15,8 @@ import (
 //LoadConfigFromFile loading config from yaml file
 func LoadConfigFromFile(config interface{}, configFile string, defaultValue interface{}) string {
 	log.Debugf("Reading configuration from '%s'", configFile)
-	file, err := os.Open(configFile)
+
+	data, err := ioutil.ReadFile(configFile)
 	if err != nil {
 		log.Warn("Configuration not found")
 		if defaultValue != nil {
@@ -24,9 +26,8 @@ func LoadConfigFromFile(config interface{}, configFile string, defaultValue inte
 		}
 		panic(err)
 	}
-	defer file.Close()
-	decoder := yaml.NewDecoder(file)
-	if err := decoder.Decode(config); err != nil {
+
+	if err := yaml.Unmarshal([]byte(os.ExpandEnv(string(data))), config); err != nil {
 		log.Warn("Configuration incorrect ")
 		if defaultValue != nil {
 			log.Warn("Default value is defined. Use it.")
@@ -41,12 +42,10 @@ func LoadConfigFromFile(config interface{}, configFile string, defaultValue inte
 		strings.TrimSuffix(filepath.Base(configFile), filepath.Ext(configFile))+".custom"+filepath.Ext(configFile),
 	)
 	log.Debugf("Try to read custom configuration from '%s'...", customConfigFile)
-	file, err = os.Open(customConfigFile)
+	data, err = ioutil.ReadFile(customConfigFile)
 	if err == nil {
-		defer file.Close()
 		log.Debugf("Reading custom configuration from '%s'", customConfigFile)
-		decoder = yaml.NewDecoder(file)
-		if err := decoder.Decode(config); err != nil {
+		if err := yaml.Unmarshal([]byte(os.ExpandEnv(string(data))), config); err != nil {
 			panic(err)
 		}
 		log.Debug("Config loaded successfully with custom config file")
