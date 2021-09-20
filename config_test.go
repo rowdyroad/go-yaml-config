@@ -17,10 +17,12 @@ type Config struct {
 	Float    float64
 	Time     time.Time
 	Duration time.Duration
+	Arr      []int
 }
 type CustomConfig struct {
 	Int    int
 	String string
+	Arr    []int
 }
 
 func writeFile(config interface{}, filename string) {
@@ -37,6 +39,7 @@ func TestMain(t *testing.T) {
 		10.10,
 		time.Unix(1000, 0),
 		time.Second,
+		nil,
 	}
 	writeFile(src, "config.yaml")
 	defer os.Remove("config.yaml")
@@ -62,6 +65,7 @@ func TestDefault(t *testing.T) {
 		10.10,
 		time.Unix(1000, 0),
 		time.Second,
+		nil,
 	}
 	var dst Config
 	configFile := LoadConfigFromFile(&dst, "config.yaml", src)
@@ -89,6 +93,7 @@ func TestCustom(t *testing.T) {
 		10.10,
 		time.Unix(1000, 0),
 		time.Second,
+		nil,
 	}
 	writeFile(src, "config.yaml")
 	defer os.Remove("config.yaml")
@@ -96,6 +101,7 @@ func TestCustom(t *testing.T) {
 	customSrc := CustomConfig{
 		2,
 		"Hello_Custom",
+		nil,
 	}
 	writeFile(customSrc, "config.custom.yaml")
 	defer os.Remove("config.custom.yaml")
@@ -131,6 +137,7 @@ func TestBrokenFileDefault(t *testing.T) {
 		10.10,
 		time.Unix(1000, 0),
 		time.Second,
+		nil,
 	}
 	var dst Config
 	assert.NotPanics(t, func() {
@@ -169,4 +176,113 @@ duration: ${DURATION_ENV}
 	assert.True(t, tt.Equal(cfg.Time))
 	assert.Equal(t, time.Second, cfg.Duration)
 
+}
+
+func TestCustom01(t *testing.T) {
+	src := Config{
+		1,
+		"Hello",
+		true,
+		10.10,
+		time.Unix(1000, 0),
+		time.Second,
+		nil,
+	}
+	writeFile(src, "config.yaml")
+	defer os.Remove("config.yaml")
+
+	customSrc := CustomConfig{
+		2,
+		"Hello_Custom",
+		nil,
+	}
+	writeFile(customSrc, "config.custom.yaml")
+	defer os.Remove("config.custom.yaml")
+
+	custom01Src := CustomConfig{
+		3,
+		"Hello_Custom.01",
+		nil,
+	}
+	writeFile(custom01Src, "config.custom.01.yaml")
+	defer os.Remove("config.custom.01.yaml")
+
+	var dst Config
+	configFile := LoadConfigFromFile(&dst, "config.yaml", nil)
+	assert.Equal(t, "config.custom.01.yaml", configFile)
+
+	assert.Equal(t, custom01Src.Int, dst.Int)
+	assert.Equal(t, custom01Src.String, dst.String)
+	assert.Equal(t, src.Bool, dst.Bool)
+	assert.Equal(t, src.Float, dst.Float)
+	assert.Equal(t, src.Time, dst.Time)
+	assert.Equal(t, src.Duration, dst.Duration)
+}
+
+func TestCustom02(t *testing.T) {
+	src := Config{
+		1,
+		"Hello",
+		true,
+		10.10,
+		time.Unix(1000, 0),
+		time.Second,
+		nil,
+	}
+	writeFile(src, "config.yaml")
+	defer os.Remove("config.yaml")
+
+	customSrc := CustomConfig{
+		2,
+		"Hello_Custom",
+		nil,
+	}
+	writeFile(customSrc, "config.custom.yaml")
+	defer os.Remove("config.custom.yaml")
+
+	custom01Src := CustomConfig{
+		3,
+		"Hello_Custom.01",
+		[]int{0, 1, 2},
+	}
+	writeFile(custom01Src, "config.custom.01.yaml")
+	defer os.Remove("config.custom.01.yaml")
+
+	custom02Src := CustomConfig{
+		4,
+		"Hello_Custom.02",
+		[]int{3, 4},
+	}
+	writeFile(custom02Src, "config.custom.02.yaml")
+	defer os.Remove("config.custom.02.yaml")
+
+	var dst Config
+	configFile := LoadConfigFromFile(&dst, "config.yaml", nil)
+	assert.Equal(t, "config.custom.02.yaml", configFile)
+
+	assert.Equal(t, custom02Src.Int, dst.Int)
+	assert.Equal(t, custom02Src.String, dst.String)
+	assert.Equal(t, custom02Src.Arr, dst.Arr)
+	assert.Equal(t, src.Bool, dst.Bool)
+	assert.Equal(t, src.Float, dst.Float)
+	assert.Equal(t, src.Time, dst.Time)
+	assert.Equal(t, src.Duration, dst.Duration)
+}
+
+func TestDumpYaml(t *testing.T) {
+	c := struct {
+		Z string
+	}{Z: "ZZ"}
+	r, e := DumpYaml(c)
+	assert.NoError(t, e)
+	assert.Equal(t, "z: ZZ\n", r)
+}
+
+func TestDumpJson(t *testing.T) {
+	c := struct {
+		Z string
+	}{Z: "ZZ"}
+	r, e := DumpJson(c)
+	assert.NoError(t, e)
+	assert.Equal(t, "{\"Z\":\"ZZ\"}", r)
 }
