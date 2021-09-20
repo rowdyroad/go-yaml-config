@@ -1,7 +1,9 @@
 package config
 
 import (
+	"encoding/json"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -37,30 +39,77 @@ func LoadConfigFromFile(config interface{}, configFile string, defaultValue inte
 		panic(err)
 	}
 
+	lastConfigFile := configFile
+	customDir := filepath.Dir(configFile)
+	ext := filepath.Ext(configFile)
+	baseNameNoExt := strings.TrimSuffix(filepath.Base(configFile), ext)
 	customConfigFile := filepath.Join(
-		filepath.Dir(configFile),
-		strings.TrimSuffix(filepath.Base(configFile), filepath.Ext(configFile))+".custom"+filepath.Ext(configFile),
+		customDir,
+		fmt.Sprintf("%s%s%s", baseNameNoExt, ".custom", ext),
 	)
-	log.Debugf("Try to read custom configuration from '%s'...", customConfigFile)
-	data, err = ioutil.ReadFile(customConfigFile)
-	if err == nil {
-		log.Debugf("Reading custom configuration from '%s'", customConfigFile)
-		if err := yaml.Unmarshal([]byte(os.ExpandEnv(string(data))), config); err != nil {
-			panic(err)
+	for i := 1; i < 100; i++ {
+		log.Debugf("Try to read custom configuration from '%s'...", customConfigFile)
+		data, err = ioutil.ReadFile(customConfigFile)
+		if err == nil {
+			log.Debugf("Reading custom configuration from '%s'", customConfigFile)
+			if err := yaml.Unmarshal([]byte(os.ExpandEnv(string(data))), config); err != nil {
+				panic(err)
+			}
+			log.Debugf("Config loaded successfully with custom config file '%s'", customConfigFile)
+			lastConfigFile = customConfigFile
+			customConfigFile = filepath.Join(
+				customDir,
+				fmt.Sprintf("%s%s.%02d%s", baseNameNoExt, ".custom", i, ext),
+			)
+		} else {
+			break
 		}
-		log.Debug("Config loaded successfully with custom config file")
-		return customConfigFile
 	}
 
 	log.Debug("Config loaded successfully")
-	return configFile
+	return lastConfigFile
 }
 
 //LoadConfig from command line argument
 func LoadConfig(config interface{}, defaultFilename string, defaultValue interface{}) string {
-	var configFile string
+	var (
+		configFile                      string
+		dumpJson, dumpYaml, shouldPanic bool
+	)
 	flag.StringVar(&configFile, "c", defaultFilename, "Config file")
 	flag.StringVar(&configFile, "config", defaultFilename, "Config file")
+	flag.BoolVar(&dumpJson, "dump-json", false, "Dump result config at json")
+	flag.BoolVar(&dumpYaml, "dump-yaml", false, "Dump result config at yaml")
+	flag.BoolVar(&shouldPanic, "panic", false, "panic after config")
 	flag.Parse()
-	return LoadConfigFromFile(config, configFile, defaultValue)
+	r := LoadConfigFromFile(config, configFile, defaultValue)
+	if dumpJson {
+		s, e := DumpJson(config)
+		fmt.Println(s)
+		if e != nil {
+			panic(e)
+		}
+	}
+	if dumpYaml {
+		s, e := DumpYaml(config)
+		fmt.Println(s)
+		if e != nil {
+			panic(e)
+		}
+	}
+
+	if shouldPanic {
+		panic(config)
+	}
+	return r
+}
+
+func DumpYaml(config interface{}) (string, error) {
+	r, e := yaml.Marshal(config)
+	return string(r), e
+}
+
+func DumpJson(config interface{}) (string, error) {
+	r, e := json.Marshal(config)
+	return string(r), e
 }
