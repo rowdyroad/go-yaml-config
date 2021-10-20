@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"syscall"
 
 	"github.com/go-yaml/yaml"
 	"github.com/jinzhu/copier"
@@ -27,7 +28,7 @@ func LoadConfigFromFile(config interface{}, configFile string, defaultValue inte
 		panic(err)
 	}
 
-	if err := yaml.Unmarshal([]byte(os.ExpandEnv(string(data))), config); err != nil {
+	if err := yaml.Unmarshal([]byte(os.Expand(string(data), getEnvWithDefault)), config); err != nil {
 		log.Warn("Configuration incorrect ")
 		if defaultValue != nil {
 			log.Warn("Default value is defined. Use it.")
@@ -63,4 +64,18 @@ func LoadConfig(config interface{}, defaultFilename string, defaultValue interfa
 	flag.StringVar(&configFile, "config", defaultFilename, "Config file")
 	flag.Parse()
 	return LoadConfigFromFile(config, configFile, defaultValue)
+}
+
+func getEnvWithDefault(key string) string {
+	defaultVal := ""
+	if idx := strings.Index(key, "="); idx != -1 {
+		defaultVal = key[idx+1:]
+		defaultVal = strings.Trim(defaultVal, " ")
+		key = key[:idx]
+	}
+	v, has := syscall.Getenv(key)
+	if !has {
+		return defaultVal
+	}
+	return v
 }
