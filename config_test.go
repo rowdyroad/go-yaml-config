@@ -170,3 +170,40 @@ duration: ${DURATION_ENV}
 	assert.Equal(t, time.Second, cfg.Duration)
 
 }
+
+func TestGetEnvWithDefault(t *testing.T) {
+	os.Remove("config.yaml")
+
+	type configCustom struct {
+		String1 string
+		String2 string
+		String3 string
+		String4 string
+		String5 string
+	}
+
+	err := ioutil.WriteFile("config.yaml", []byte(
+		`string1: ${TEST_ENV1}
+string2: ${TEST_ENV2=hello}
+string3: ${TEST_ENV3=}
+string4: ${TEST_ENV4}
+string5: ${TEST_ENV5=hello}
+`), 0777)
+	assert.NoError(t, err)
+	defer os.Remove("config.yaml")
+
+	os.Setenv("TEST_ENV1", "test_val")
+	defer os.Unsetenv("TEST_ENV1")
+
+	os.Setenv("TEST_ENV5", "test_val")
+	defer os.Unsetenv("TEST_ENV5")
+
+	var cfg configCustom
+	assert.NotPanics(t, func() { LoadConfigFromFile(&cfg, "config.yaml", nil) })
+
+	assert.Equal(t, "test_val", cfg.String1)
+	assert.Equal(t, "hello", cfg.String2)
+	assert.Equal(t, "", cfg.String3)
+	assert.Equal(t, "", cfg.String4)
+	assert.Equal(t, "test_val", cfg.String5)
+}
