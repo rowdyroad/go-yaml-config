@@ -46,7 +46,7 @@ func LoadConfigFromFile(config interface{}, configFile string, defaultValue inte
 	data, err = ioutil.ReadFile(customConfigFile)
 	if err == nil {
 		log.Debugf("Reading custom configuration from '%s'", customConfigFile)
-		if err := yaml.Unmarshal([]byte(os.ExpandEnv(string(data))), config); err != nil {
+		if err := yaml.Unmarshal([]byte(os.Expand(string(data),getEnvWithDefault)), config); err != nil {
 			panic(err)
 		}
 		log.Debug("Config loaded successfully with custom config file")
