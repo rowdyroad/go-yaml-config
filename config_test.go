@@ -18,6 +18,7 @@ type Config struct {
 	Time     time.Time
 	Duration time.Duration
 	Arr      []int
+	Extra    map[string]interface{}
 }
 type CustomConfig struct {
 	Int    int
@@ -31,15 +32,15 @@ func writeFile(config interface{}, filename string) {
 		panic(err)
 	}
 }
-func TestMain(t *testing.T) {
+
+func TestNothing(t *testing.T) {
 	src := Config{
-		1,
-		"Hello",
-		true,
-		10.10,
-		time.Unix(1000, 0),
-		time.Second,
-		nil,
+		Int:      1,
+		String:   "Hello",
+		Bool:     true,
+		Float:    10.10,
+		Time:     time.Unix(1000, 0),
+		Duration: time.Second,
 	}
 	writeFile(src, "config.yaml")
 	defer os.Remove("config.yaml")
@@ -54,18 +55,19 @@ func TestMain(t *testing.T) {
 	assert.Equal(t, src.Float, dst.Float)
 	assert.Equal(t, src.Time, dst.Time)
 	assert.Equal(t, src.Duration, dst.Duration)
+	t.Log(src.Time)
+	t.Log(dst.Time)
 }
 
 func TestDefault(t *testing.T) {
 	os.Remove("config.yaml")
 	src := Config{
-		1,
-		"Hello",
-		true,
-		10.10,
-		time.Unix(1000, 0),
-		time.Second,
-		nil,
+		Int:      1,
+		String:   "Hello",
+		Bool:     true,
+		Float:    10.10,
+		Time:     time.Unix(1000, 0),
+		Duration: time.Second,
 	}
 	var dst Config
 	configFile := LoadConfigFromFile(&dst, "config.yaml", src)
@@ -87,13 +89,12 @@ func TestNoDefaultError(t *testing.T) {
 }
 func TestCustom(t *testing.T) {
 	src := Config{
-		1,
-		"Hello",
-		true,
-		10.10,
-		time.Unix(1000, 0),
-		time.Second,
-		nil,
+		Int:      1,
+		String:   "Hello",
+		Bool:     true,
+		Float:    10.10,
+		Time:     time.Unix(1000, 0),
+		Duration: time.Second,
 	}
 	writeFile(src, "config.yaml")
 	defer os.Remove("config.yaml")
@@ -131,13 +132,12 @@ func TestBrokenFileDefault(t *testing.T) {
 	}
 	defer os.Remove("config.yaml")
 	src := Config{
-		1,
-		"Hello",
-		true,
-		10.10,
-		time.Unix(1000, 0),
-		time.Second,
-		nil,
+		Int:      1,
+		String:   "Hello",
+		Bool:     true,
+		Float:    10.10,
+		Time:     time.Unix(1000, 0),
+		Duration: time.Second,
 	}
 	var dst Config
 	assert.NotPanics(t, func() {
@@ -180,13 +180,12 @@ duration: ${DURATION_ENV}
 
 func TestCustom01(t *testing.T) {
 	src := Config{
-		1,
-		"Hello",
-		true,
-		10.10,
-		time.Unix(1000, 0),
-		time.Second,
-		nil,
+		Int:      1,
+		String:   "Hello",
+		Bool:     true,
+		Float:    10.10,
+		Time:     time.Unix(1000, 0),
+		Duration: time.Second,
 	}
 	writeFile(src, "config.yaml")
 	defer os.Remove("config.yaml")
@@ -221,13 +220,15 @@ func TestCustom01(t *testing.T) {
 
 func TestCustom02(t *testing.T) {
 	src := Config{
-		1,
-		"Hello",
-		true,
-		10.10,
-		time.Unix(1000, 0),
-		time.Second,
-		nil,
+		Int:      1,
+		String:   "Hello",
+		Bool:     true,
+		Float:    10.10,
+		Time:     time.Unix(1000, 0),
+		Duration: time.Second,
+		Extra: map[string]interface{}{
+			"foo": "bar",
+		},
 	}
 	writeFile(src, "config.yaml")
 	defer os.Remove("config.yaml")
@@ -267,6 +268,7 @@ func TestCustom02(t *testing.T) {
 	assert.Equal(t, src.Float, dst.Float)
 	assert.Equal(t, src.Time, dst.Time)
 	assert.Equal(t, src.Duration, dst.Duration)
+	assert.Equal(t, src.Extra, dst.Extra)
 }
 
 func TestDumpYaml(t *testing.T) {
