@@ -9,12 +9,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/go-yaml/yaml"
 	"github.com/jinzhu/copier"
 	log "github.com/rowdyroad/go-simple-logger"
+	"gopkg.in/yaml.v3"
 )
 
-//LoadConfigFromFile loading config from yaml file
+// LoadConfigFromFile loading config from yaml file
 func LoadConfigFromFile(config interface{}, configFile string, defaultValue interface{}) string {
 	log.Debugf("Reading configuration from '%s'", configFile)
 
@@ -70,7 +70,7 @@ func LoadConfigFromFile(config interface{}, configFile string, defaultValue inte
 	return lastConfigFile
 }
 
-//LoadConfig from command line argument
+// LoadConfig from command line argument
 func LoadConfig(config interface{}, defaultFilename string, defaultValue interface{}) string {
 	var (
 		configFile                      string
