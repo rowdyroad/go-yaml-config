@@ -57,10 +57,11 @@ func TestNothing(t *testing.T) {
 	assert.Equal(t, src.Duration, dst.Duration)
 	t.Log(src.Time)
 	t.Log(dst.Time)
-	t.Log(time.UTC)
-	t.Log(time.Local)
+	t.Log(time.UTC, *time.UTC)
+	t.Log(time.Local == nil, time.Local == time.UTC)
+	t.Log(time.Local, *time.Local)
 	c, _ := os.ReadFile("config.yaml")
-	t.Log(string(c))
+	t.Log("\n\n", string(c))
 }
 
 func TestDefault(t *testing.T) {
