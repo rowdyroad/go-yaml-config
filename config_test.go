@@ -53,15 +53,8 @@ func TestNothing(t *testing.T) {
 	assert.Equal(t, src.String, dst.String)
 	assert.Equal(t, src.Bool, dst.Bool)
 	assert.Equal(t, src.Float, dst.Float)
-	assert.Equal(t, src.Time, dst.Time)
+	assert.Equal(t, src.Time.UTC(), dst.Time.UTC())
 	assert.Equal(t, src.Duration, dst.Duration)
-	t.Log(src.Time)
-	t.Log(dst.Time)
-	t.Log(time.UTC, *time.UTC)
-	t.Log(time.Local == nil, time.Local == time.UTC)
-	t.Log(time.Local, *time.Local)
-	c, _ := os.ReadFile("config.yaml")
-	t.Log("\n\n", string(c))
 }
 
 func TestDefault(t *testing.T) {
@@ -81,7 +74,7 @@ func TestDefault(t *testing.T) {
 	assert.Equal(t, src.String, dst.String)
 	assert.Equal(t, src.Bool, dst.Bool)
 	assert.Equal(t, src.Float, dst.Float)
-	assert.Equal(t, src.Time, dst.Time)
+	assert.Equal(t, src.Time.UTC(), dst.Time.UTC())
 	assert.Equal(t, src.Duration, dst.Duration)
 }
 
@@ -120,7 +113,7 @@ func TestCustom(t *testing.T) {
 	assert.Equal(t, customSrc.String, dst.String)
 	assert.Equal(t, src.Bool, dst.Bool)
 	assert.Equal(t, src.Float, dst.Float)
-	assert.Equal(t, src.Time, dst.Time)
+	assert.Equal(t, src.Time.UTC(), dst.Time.UTC())
 	assert.Equal(t, src.Duration, dst.Duration)
 }
 
@@ -219,7 +212,7 @@ func TestCustom01(t *testing.T) {
 	assert.Equal(t, custom01Src.String, dst.String)
 	assert.Equal(t, src.Bool, dst.Bool)
 	assert.Equal(t, src.Float, dst.Float)
-	assert.Equal(t, src.Time, dst.Time)
+	assert.Equal(t, src.Time.UTC(), dst.Time.UTC())
 	assert.Equal(t, src.Duration, dst.Duration)
 }
 
@@ -271,7 +264,7 @@ func TestCustom02(t *testing.T) {
 	assert.Equal(t, custom02Src.Arr, dst.Arr)
 	assert.Equal(t, src.Bool, dst.Bool)
 	assert.Equal(t, src.Float, dst.Float)
-	assert.Equal(t, src.Time, dst.Time)
+	assert.Equal(t, src.Time.UTC(), dst.Time.UTC())
 	assert.Equal(t, src.Duration, dst.Duration)
 	assert.Equal(t, src.Extra, dst.Extra)
 }
