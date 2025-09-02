@@ -209,7 +209,7 @@ string5: ${TEST_ENV5=hello}
 
 func TestMultilineEnv(t *testing.T) {
 	os.Remove("config.yaml")
-	os.Setenv("TEST_ENV1", "test_val\nhello\nworld\n\n")
+	os.Setenv("TEST_ENV1", "test_val\nhello\nworld \"hello\" $variable\n\n")
 	defer os.Unsetenv("TEST_ENV1")
 
 	type configCustom struct {
@@ -229,6 +229,6 @@ a:
 	defer os.Remove("config.yaml")
 	assert.NotPanics(t, func() { LoadConfigFromFile(&cfg, "config.yaml", nil) })
 
-	assert.Equal(t, "test_val\nhello\nworld", cfg.String1)
-	assert.Equal(t, "test_val\nhello\nworld", cfg.A.B)
+	assert.Equal(t, "test_val\nhello\nworld \"hello\" $variable", cfg.String1)
+	assert.Equal(t, "test_val\nhello\nworld \"hello\" $variable", cfg.A.B)
 }

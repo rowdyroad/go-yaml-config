@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/json"
 	"flag"
 	"os"
 	"path/filepath"
@@ -77,7 +78,8 @@ func getEnvWithDefault(key string) string {
 	}
 	v = strings.Trim(v, " \n")
 	if strings.Contains(v, "\n") {
-		v = `"` + strings.ReplaceAll(v, "\n", "\\n") + `"`
+		data, _ := json.Marshal(v)
+		v = string(data)
 	}
 	return v
 }
