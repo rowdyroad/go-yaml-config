@@ -2,7 +2,6 @@ package config
 
 import (
 	"flag"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -13,11 +12,11 @@ import (
 	log "github.com/rowdyroad/go-simple-logger"
 )
 
-//LoadConfigFromFile loading config from yaml file
+// LoadConfigFromFile loading config from yaml file
 func LoadConfigFromFile(config interface{}, configFile string, defaultValue interface{}) string {
 	log.Debugf("Reading configuration from '%s'", configFile)
 
-	data, err := ioutil.ReadFile(configFile)
+	data, err := os.ReadFile(configFile)
 	if err != nil {
 		log.Warn("Configuration not found")
 		if defaultValue != nil {
@@ -43,10 +42,10 @@ func LoadConfigFromFile(config interface{}, configFile string, defaultValue inte
 		strings.TrimSuffix(filepath.Base(configFile), filepath.Ext(configFile))+".custom"+filepath.Ext(configFile),
 	)
 	log.Debugf("Try to read custom configuration from '%s'...", customConfigFile)
-	data, err = ioutil.ReadFile(customConfigFile)
+	data, err = os.ReadFile(customConfigFile)
 	if err == nil {
 		log.Debugf("Reading custom configuration from '%s'", customConfigFile)
-		if err := yaml.Unmarshal([]byte(os.Expand(string(data),getEnvWithDefault)), config); err != nil {
+		if err := yaml.Unmarshal([]byte(os.Expand(string(data), getEnvWithDefault)), config); err != nil {
 			panic(err)
 		}
 		log.Debug("Config loaded successfully with custom config file")
@@ -57,7 +56,7 @@ func LoadConfigFromFile(config interface{}, configFile string, defaultValue inte
 	return configFile
 }
 
-//LoadConfig from command line argument
+// LoadConfig from command line argument
 func LoadConfig(config interface{}, defaultFilename string, defaultValue interface{}) string {
 	var configFile string
 	flag.StringVar(&configFile, "c", defaultFilename, "Config file")
@@ -70,12 +69,15 @@ func getEnvWithDefault(key string) string {
 	defaultVal := ""
 	if idx := strings.Index(key, "="); idx != -1 {
 		defaultVal = key[idx+1:]
-		defaultVal = strings.Trim(defaultVal, " ")
 		key = key[:idx]
 	}
 	v, has := syscall.Getenv(key)
 	if !has {
-		return defaultVal
+		v = defaultVal
+	}
+	v = strings.Trim(v, " \n")
+	if strings.Contains(v, "\n") {
+		v = `"` + strings.ReplaceAll(v, "\n", "\\n") + `"`
 	}
 	return v
 }

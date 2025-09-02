@@ -1,7 +1,6 @@
 package config
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -25,7 +24,7 @@ type CustomConfig struct {
 
 func writeFile(config interface{}, filename string) {
 	b, _ := yaml.Marshal(config)
-	if err := ioutil.WriteFile(filename, b, 0666); err != nil {
+	if err := os.WriteFile(filename, b, 0666); err != nil {
 		panic(err)
 	}
 }
@@ -113,14 +112,14 @@ func TestCustom(t *testing.T) {
 }
 
 func TestBrokenFilePanic(t *testing.T) {
-	assert.NoError(t, ioutil.WriteFile("config.yaml", []byte("hello"), 0666))
+	assert.NoError(t, os.WriteFile("config.yaml", []byte("hello"), 0666))
 	defer os.Remove("config.yaml")
 	var dst Config
 	assert.Panics(t, func() { LoadConfigFromFile(&dst, "config.yaml", nil) })
 }
 
 func TestBrokenFileDefault(t *testing.T) {
-	if err := ioutil.WriteFile("config.yaml", []byte("hello"), 0666); err != nil {
+	if err := os.WriteFile("config.yaml", []byte("hello"), 0666); err != nil {
 		panic(err)
 	}
 	defer os.Remove("config.yaml")
@@ -140,7 +139,7 @@ func TestBrokenFileDefault(t *testing.T) {
 
 func TestEnv(t *testing.T) {
 
-	err := ioutil.WriteFile("config.yaml", []byte(
+	err := os.WriteFile("config.yaml", []byte(
 		`string: ${STR_ENV}
 int: ${INT_ENV}
 bool: ${BOOL_ENV}
@@ -182,7 +181,7 @@ func TestGetEnvWithDefault(t *testing.T) {
 		String5 string
 	}
 
-	err := ioutil.WriteFile("config.yaml", []byte(
+	err := os.WriteFile("config.yaml", []byte(
 		`string1: ${TEST_ENV1}
 string2: ${TEST_ENV2=hello}
 string3: ${TEST_ENV3=}
@@ -206,4 +205,30 @@ string5: ${TEST_ENV5=hello}
 	assert.Equal(t, "", cfg.String3)
 	assert.Equal(t, "", cfg.String4)
 	assert.Equal(t, "test_val", cfg.String5)
+}
+
+func TestMultilineEnv(t *testing.T) {
+	os.Remove("config.yaml")
+	os.Setenv("TEST_ENV1", "test_val\nhello\nworld\n\n")
+	defer os.Unsetenv("TEST_ENV1")
+
+	type configCustom struct {
+		String1 string
+		A       struct {
+			B string
+		}
+	}
+	var cfg configCustom
+	err := os.WriteFile("config.yaml", []byte(
+		`string1: ${TEST_ENV1}
+a:
+  b: ${TEST_ENV1}
+`), 0777)
+
+	assert.NoError(t, err)
+	defer os.Remove("config.yaml")
+	assert.NotPanics(t, func() { LoadConfigFromFile(&cfg, "config.yaml", nil) })
+
+	assert.Equal(t, "test_val\nhello\nworld", cfg.String1)
+	assert.Equal(t, "test_val\nhello\nworld", cfg.A.B)
 }
