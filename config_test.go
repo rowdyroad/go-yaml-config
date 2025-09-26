@@ -1,12 +1,11 @@
 package config
 
 import (
+	"github.com/goccy/go-yaml"
+	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
 	"time"
-
-	"github.com/go-yaml/yaml"
-	"github.com/stretchr/testify/assert"
 )
 
 type Config struct {
@@ -28,7 +27,8 @@ func writeFile(config interface{}, filename string) {
 		panic(err)
 	}
 }
-func TestMain(t *testing.T) {
+
+func TestTypes(t *testing.T) {
 	src := Config{
 		1,
 		"Hello",

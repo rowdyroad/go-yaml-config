@@ -3,14 +3,13 @@ package config
 import (
 	"encoding/json"
 	"flag"
+	"github.com/goccy/go-yaml"
+	"github.com/jinzhu/copier"
+	log "github.com/rowdyroad/go-simple-logger"
 	"os"
 	"path/filepath"
 	"strings"
 	"syscall"
-
-	"github.com/go-yaml/yaml"
-	"github.com/jinzhu/copier"
-	log "github.com/rowdyroad/go-simple-logger"
 )
 
 // LoadConfigFromFile loading config from yaml file
